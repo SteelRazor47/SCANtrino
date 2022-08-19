@@ -18,10 +18,12 @@ import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.content.ContextCompat
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
@@ -30,9 +32,13 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.steelrazor47.scantrino.ui.camera.CameraScreen
+import com.steelrazor47.scantrino.ui.camera.ReceiptReviewViewModel
+import com.steelrazor47.scantrino.ui.camera.ReviewReceiptScreen
 import com.steelrazor47.scantrino.ui.overview.OverviewScreen
 import com.steelrazor47.scantrino.ui.theme.ScantrinoTheme
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -51,7 +57,7 @@ fun ScantrinoApp() {
             ActivityResultContracts.RequestPermission()
         ) { isGranted ->
             if (isGranted)
-                navController.navigateUpTo(Screen.Camera.route)
+                navController.navigateUpTo(Routes.Camera.route)
             else
                 Toast.makeText(context, "Camera permission denied", Toast.LENGTH_SHORT).show()
         }
@@ -63,20 +69,20 @@ fun ScantrinoApp() {
                     val currentDestination = navBackStackEntry?.destination
                     BottomNavigationItem(
                         icon = { Icon(Icons.Filled.List, "") },
-                        selected = currentDestination?.hierarchy?.any { it.route == Screen.Overview.route } == true,
+                        selected = currentDestination?.hierarchy?.any { it.route == Routes.Overview.route } == true,
                         onClick = {
-                            navController.navigateUpTo(Screen.Overview.route)
+                            navController.navigateUpTo(Routes.Overview.route)
                         }
                     )
                     BottomNavigationItem(
                         icon = { Icon(Icons.Filled.PhotoCamera, "") },
-                        selected = currentDestination?.hierarchy?.any { it.route == Screen.Camera.route } == true,
+                        selected = currentDestination?.hierarchy?.any { it.route == Routes.Camera.route } == true,
                         onClick = {
                             when (PackageManager.PERMISSION_GRANTED) {
                                 ContextCompat.checkSelfPermission(
                                     context,
                                     Manifest.permission.CAMERA
-                                ) -> navController.navigateUpTo(Screen.Camera.route)
+                                ) -> navController.navigateUpTo(Routes.Camera.route)
                                 else -> {
                                     launcher.launch(Manifest.permission.CAMERA)
                                 }
@@ -88,11 +94,27 @@ fun ScantrinoApp() {
         ) { padding ->
             NavHost(
                 navController = navController,
-                startDestination = Screen.Overview.route,
+                startDestination = Routes.Overview.route,
                 modifier = Modifier.padding(padding)
             ) {
-                composable(route = Screen.Overview.route) { OverviewScreen() }
-                composable(route = Screen.Camera.route) { CameraScreen() }
+                composable(route = Routes.Overview.route) { OverviewScreen() }
+                composable(route = Routes.Camera.route) {
+                    CameraScreen(
+                        onReviewReceipt = {
+                            navController.navigate(Routes.ReviewReceipt.route) {
+                                launchSingleTop = true
+                            }
+                        },
+                    )
+                }
+                composable(route = Routes.ReviewReceipt.route) { backStackEntry ->
+                    val parentEntry = remember(backStackEntry) {
+                        navController.getBackStackEntry(Routes.Camera.route)
+                    }
+                    val reviewViewModel = hiltViewModel<ReceiptReviewViewModel>(parentEntry)
+                    ReviewReceiptScreen(reviewViewModel)
+                }
+
             }
         }
     }
