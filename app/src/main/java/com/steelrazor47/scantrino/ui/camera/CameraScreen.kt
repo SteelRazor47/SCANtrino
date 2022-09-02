@@ -22,10 +22,10 @@ fun CameraScreen(
     viewModel: ReceiptReviewViewModel = viewModel()
 ) {
     Box {
-        Preview(TextAnalyzer { viewModel.setLines(it.textBlocks.flatMap { block -> block.lines }) })
+        Preview(TextAnalyzer { viewModel.setAnalyzedText(it) })
 
         Canvas(modifier = Modifier.fillMaxSize()) {
-            viewModel.boxes.forEach {
+            viewModel.boundingBoxes.forEach {
                 this.drawRect(
                     color = Color.Red,
                     topLeft = it.topLeft,

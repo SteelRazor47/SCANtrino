@@ -1,23 +1,44 @@
 package com.steelrazor47.scantrino.ui.camera
 
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.toComposeRect
 import androidx.lifecycle.ViewModel
 import com.google.mlkit.vision.text.Text
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import kotlin.math.roundToInt
 
 @HiltViewModel
 class ReceiptReviewViewModel @Inject constructor() : ViewModel() {
-    private val lines = mutableStateListOf<Text.Line>()
-    val text: List<String>
-        get() = lines.map { it.text }
-    val boxes: List<Rect>
-        get() = lines.map { it.boundingBox?.toComposeRect() ?: Rect.Zero }
+    var previewReceipt by mutableStateOf(Receipt())
+        private set
 
-    fun setLines(lines: List<Text.Line>) {
-        this.lines.clear()
-        this.lines.addAll(lines)
+    private val _boundingBoxes = mutableStateListOf<Rect>()
+    val boundingBoxes: List<Rect> = _boundingBoxes
+
+    fun setAnalyzedText(text: Text) {
+        val lines = text.textBlocks.flatMap { it.lines }.filter { it.boundingBox != null }
+
+        _boundingBoxes.clear()
+        _boundingBoxes.addAll(lines.map { it.boundingBox!!.toComposeRect() })
+
+        val average = lines.map { it.boundingBox!!.height() }.average()
+        val items = lines.sortedBy { it.boundingBox!!.top }
+            .groupBy { (it.boundingBox!!.centerY() / average).roundToInt() }
+            .filter { (_, list) -> list.size >= 2 }
+            .map { (_, list) ->
+                val sortedList = list.sortedBy { it.boundingBox!!.left }
+                ReceiptItem(sortedList.first().text, sortedList.last().text)
+            }
+
+        previewReceipt = Receipt(items)
     }
 }
+
+data class Receipt(val items: List<ReceiptItem> = listOf())
+
+data class ReceiptItem(val name: String, val price: String)
