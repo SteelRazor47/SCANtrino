@@ -1,4 +1,4 @@
-package com.steelrazor47.scantrino
+package com.steelrazor47.scantrino.utils
 
 import android.util.Log
 import androidx.camera.core.ExperimentalGetImage

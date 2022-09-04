@@ -36,6 +36,7 @@ import com.steelrazor47.scantrino.ui.camera.ReceiptReviewViewModel
 import com.steelrazor47.scantrino.ui.camera.ReviewReceiptScreen
 import com.steelrazor47.scantrino.ui.overview.OverviewScreen
 import com.steelrazor47.scantrino.ui.theme.ScantrinoTheme
+import com.steelrazor47.scantrino.utils.Routes
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint

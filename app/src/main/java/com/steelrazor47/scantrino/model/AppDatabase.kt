@@ -1,4 +1,4 @@
-package com.steelrazor47.scantrino
+package com.steelrazor47.scantrino.model
 
 import android.content.Context
 import androidx.room.Database
@@ -13,15 +13,15 @@ import javax.inject.Singleton
 
 @Database(entities = [Receipt::class], version = 1)
 abstract class AppDatabase : RoomDatabase() {
-    abstract fun receiptDao(): ReceiptDao
+    abstract fun receiptsDao(): ReceiptsDao
 }
 
 @InstallIn(SingletonComponent::class)
 @Module
 class DatabaseModule {
     @Provides
-    fun provideReceiptDao(appDatabase: AppDatabase): ReceiptDao {
-        return appDatabase.receiptDao()
+    fun provideReceiptDao(appDatabase: AppDatabase): ReceiptsDao {
+        return appDatabase.receiptsDao()
     }
 
     @Provides

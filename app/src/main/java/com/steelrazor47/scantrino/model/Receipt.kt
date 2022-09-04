@@ -1,15 +1,15 @@
-package com.steelrazor47.scantrino
+package com.steelrazor47.scantrino.model
 
 import androidx.room.Dao
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import androidx.room.Query
 
-@Entity
+@Entity(tableName = "receipts")
 data class Receipt(@PrimaryKey(autoGenerate = true) val id: Int, val name: String, val price: Int)
 
 @Dao
-interface ReceiptDao{
-    @Query("SELECT * FROM receipt")
+interface ReceiptsDao{
+    @Query("SELECT * FROM receipts")
     suspend fun getReceipts(): List<Receipt>
 }

@@ -13,7 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.steelrazor47.scantrino.TextAnalyzer
+import com.steelrazor47.scantrino.utils.TextAnalyzer
 
 
 @Composable

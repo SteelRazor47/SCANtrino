@@ -8,7 +8,7 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.toComposeRect
 import androidx.lifecycle.ViewModel
 import com.google.mlkit.vision.text.Text
-import com.steelrazor47.scantrino.ReceiptsRepository
+import com.steelrazor47.scantrino.model.ReceiptsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
