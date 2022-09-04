@@ -8,12 +8,14 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.toComposeRect
 import androidx.lifecycle.ViewModel
 import com.google.mlkit.vision.text.Text
+import com.steelrazor47.scantrino.ReceiptsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 import kotlin.math.roundToInt
 
 @HiltViewModel
-class ReceiptReviewViewModel @Inject constructor() : ViewModel() {
+class ReceiptReviewViewModel @Inject constructor(private val receiptsRepo: ReceiptsRepository) : ViewModel() {
     var previewReceipt by mutableStateOf(Receipt())
         private set
 
@@ -21,6 +23,7 @@ class ReceiptReviewViewModel @Inject constructor() : ViewModel() {
     val boundingBoxes: List<Rect> = _boundingBoxes
 
     fun setAnalyzedText(text: Text) {
+        runBlocking { receiptsRepo.getReceipts() }
         val lines = text.textBlocks.flatMap { it.lines }.filter { it.boundingBox != null }
 
         _boundingBoxes.clear()

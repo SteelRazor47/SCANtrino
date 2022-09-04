@@ -12,14 +12,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.steelrazor47.scantrino.TextAnalyzer
 
 
 @Composable
 fun CameraScreen(
     onReviewReceipt: () -> Unit = {},
-    viewModel: ReceiptReviewViewModel = viewModel()
+    viewModel: ReceiptReviewViewModel = hiltViewModel()
 ) {
     Box {
         Preview(TextAnalyzer { viewModel.setAnalyzedText(it) })

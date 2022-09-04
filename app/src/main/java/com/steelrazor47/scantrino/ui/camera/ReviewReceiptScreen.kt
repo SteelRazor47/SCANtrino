@@ -8,10 +8,10 @@ import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.runtime.Composable
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 
 @Composable
-fun ReviewReceiptScreen(viewModel: ReceiptReviewViewModel = viewModel()) {
+fun ReviewReceiptScreen(viewModel: ReceiptReviewViewModel = hiltViewModel()) {
     LazyColumn {
         items(viewModel.previewReceipt.items) { item ->
             Text("${item.name}\t\t${item.price}")
