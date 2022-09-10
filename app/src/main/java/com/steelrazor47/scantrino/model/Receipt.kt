@@ -1,15 +1,43 @@
 package com.steelrazor47.scantrino.model
 
-import androidx.room.Dao
-import androidx.room.Entity
-import androidx.room.PrimaryKey
-import androidx.room.Query
+import androidx.room.*
+import kotlinx.coroutines.flow.Flow
+import java.time.LocalDateTime
 
-@Entity(tableName = "receipts")
-data class Receipt(@PrimaryKey(autoGenerate = true) val id: Int, val name: String, val price: Int)
+data class Receipt(
+//    @Embedded
+//    val info: ReceiptInfo,
+    val id: Int = 0,
+    val store: String = "",
+    val date: LocalDateTime = LocalDateTime.now(),
+    @Relation(
+        parentColumn = "id", entityColumn = "itemId",
+        associateBy = Junction(
+            value = ReceiptCrossRef::class,
+            parentColumn = "receiptId",
+            entityColumn = "receiptItemId"
+        )
+    )
+    val items: List<ReceiptItem>
+)
 
 @Dao
-interface ReceiptsDao{
+interface ReceiptsDao {
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun setReceiptInfo(receiptInfo: ReceiptInfo): Long // Row Id
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun setReceiptItemInfos(receiptItems: List<ReceiptItemInfo>): List<Long>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun setReceiptMappings(receiptRefs: List<ReceiptCrossRef>)
+
+    @Transaction
     @Query("SELECT * FROM receipts")
-    suspend fun getReceipts(): List<Receipt>
+    fun getReceipts(): Flow<List<Receipt>>
+
+    @Transaction
+    @Query("SELECT * FROM receipts WHERE receipts.id = :id")
+    fun getReceipt(id: Long): Flow<Receipt?>
+
 }
