@@ -33,7 +33,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.steelrazor47.scantrino.ui.camera.CameraScreen
 import com.steelrazor47.scantrino.ui.camera.ReceiptReviewViewModel
-import com.steelrazor47.scantrino.ui.camera.ReviewReceiptScreen
+import com.steelrazor47.scantrino.ui.camera.ReceiptReviewScreen
 import com.steelrazor47.scantrino.ui.overview.OverviewScreen
 import com.steelrazor47.scantrino.ui.theme.ScantrinoTheme
 import com.steelrazor47.scantrino.utils.Routes
@@ -113,7 +113,9 @@ fun ScantrinoApp() {
                         navController.getBackStackEntry(Routes.Camera.route)
                     }
                     val reviewViewModel = hiltViewModel<ReceiptReviewViewModel>(parentEntry)
-                    ReviewReceiptScreen(reviewViewModel)
+                    ReceiptReviewScreen(reviewViewModel, onReceiptSaved = {
+                        navController.navigateUpTo(Routes.Overview.route)
+                    })
                 }
 
             }
@@ -133,6 +135,5 @@ fun NavHostController.navigateUpTo(route: String) {
             saveState = true
         }
         launchSingleTop = true
-        restoreState = true
     }
 }

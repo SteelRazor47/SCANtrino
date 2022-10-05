@@ -1,47 +1,54 @@
 package com.steelrazor47.scantrino.ui.camera
 
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.toComposeRect
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.google.mlkit.vision.text.Text
-import com.steelrazor47.scantrino.model.ReceiptsRepository
+import com.steelrazor47.scantrino.model.Receipt
+import com.steelrazor47.scantrino.model.ReceiptItem
+import com.steelrazor47.scantrino.model.ReceiptsDao
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.math.roundToInt
 
 @HiltViewModel
-class ReceiptReviewViewModel @Inject constructor(private val receiptsRepo: ReceiptsRepository) : ViewModel() {
-    var previewReceipt by mutableStateOf(Receipt())
+class ReceiptReviewViewModel @Inject constructor(private val receiptsDao: ReceiptsDao) :
+    ViewModel() {
+    private var lines: List<Text.Line> = listOf()
+    var boundingBoxes by mutableStateOf(listOf<Rect>())
         private set
-
-    private val _boundingBoxes = mutableStateListOf<Rect>()
-    val boundingBoxes: List<Rect> = _boundingBoxes
+    var receiptReview: Receipt by mutableStateOf(Receipt())
 
     fun setAnalyzedText(text: Text) {
-        runBlocking { receiptsRepo.getReceipts() }
-        val lines = text.textBlocks.flatMap { it.lines }.filter { it.boundingBox != null }
+        lines = text.textBlocks.flatMap { it.lines }.filter { it.boundingBox != null }
+        boundingBoxes = lines.map { it.boundingBox!!.toComposeRect() }
+    }
 
-        _boundingBoxes.clear()
-        _boundingBoxes.addAll(lines.map { it.boundingBox!!.toComposeRect() })
-
+    fun setReviewReceipt() {
         val average = lines.map { it.boundingBox!!.height() }.average()
+
         val items = lines.sortedBy { it.boundingBox!!.top }
             .groupBy { (it.boundingBox!!.centerY() / average).roundToInt() }
             .filter { (_, list) -> list.size >= 2 }
             .map { (_, list) ->
                 val sortedList = list.sortedBy { it.boundingBox!!.left }
-                ReceiptItem(sortedList.first().text, sortedList.last().text)
+                val price = sortedList.last().text.replace("""[^\d]""".toRegex(), "")
+                    .toIntOrNull() ?: 0
+                ReceiptItem(name = sortedList.first().text, price = price)
             }
 
-        previewReceipt = Receipt(items)
+        receiptReview = Receipt(items = items)
+    }
+
+    fun saveReviewReceipt() {
+        viewModelScope.launch {
+            receiptsDao.insertReceipt(receiptReview)
+        }
+        receiptReview = Receipt()
     }
 }
-
-data class Receipt(val items: List<ReceiptItem> = listOf())
-
-data class ReceiptItem(val name: String, val price: String)

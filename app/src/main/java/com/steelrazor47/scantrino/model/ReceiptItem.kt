@@ -2,12 +2,10 @@ package com.steelrazor47.scantrino.model
 
 import androidx.room.*
 import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
-
 
 @Entity(tableName = "receipts")
 data class ReceiptInfo(
-    @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val store: String = "",
     val date: LocalDateTime = LocalDateTime.now()
 )
@@ -15,7 +13,7 @@ data class ReceiptInfo(
 
 @Entity(tableName = "receipt_items")
 data class ReceiptItemInfo(
-    @PrimaryKey(autoGenerate = true) val itemId: Int = 0,
+    @PrimaryKey(autoGenerate = true) val itemId: Long = 0,
     val name: String = "",
 )
 
@@ -23,7 +21,7 @@ data class ReceiptItemInfo(
 data class ReceiptItem(
 //    @Embedded
 //    val info: ReceiptItemInfo,
-    val itemId: Int = 0,
+    val itemId: Long = 0,
     val name: String = "",
     val price: Int = 0
 )

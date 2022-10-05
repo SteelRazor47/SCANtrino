@@ -35,7 +35,10 @@ fun CameraScreen(
             }
         }
         FloatingActionButton(
-            onClick = onReviewReceipt,
+            onClick = {
+                viewModel.setReviewReceipt()
+                onReviewReceipt()
+            },
             modifier = Modifier.align(Alignment.BottomEnd)
         ) {
             Icon(Icons.Filled.Check, "")
