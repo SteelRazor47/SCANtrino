@@ -12,15 +12,20 @@ data class ReceiptInfo(
 
 
 @Entity(tableName = "receipt_items")
-data class ReceiptItemInfo(
+data class ReceiptItemName(
     @PrimaryKey(autoGenerate = true) val itemId: Long = 0,
     val name: String = "",
 )
 
-@DatabaseView("""SELECT * from receipt_items JOIN receipt_cross_ref as cr ON cr.receiptItemId = receipt_items.itemId""")
+@DatabaseView(
+    """
+    SELECT receiptId, itemId, name, price from receipt_cross_ref 
+    JOIN receipt_items 
+    ON receipt_items.itemId = receipt_cross_ref.receiptItemId
+"""
+)
 data class ReceiptItem(
-//    @Embedded
-//    val info: ReceiptItemInfo,
+    val receiptId: Long = 0,
     val itemId: Long = 0,
     val name: String = "",
     val price: Int = 0
@@ -40,7 +45,7 @@ data class ReceiptItem(
             onDelete = ForeignKey.CASCADE
         ),
         ForeignKey(
-            entity = ReceiptItemInfo::class,
+            entity = ReceiptItemName::class,
             parentColumns = ["itemId"],
             childColumns = ["receiptItemId"],
             onUpdate = ForeignKey.CASCADE,

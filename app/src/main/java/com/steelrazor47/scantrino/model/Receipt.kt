@@ -11,12 +11,7 @@ data class Receipt(
     val store: String = "",
     val date: LocalDateTime = LocalDateTime.now(),
     @Relation(
-        parentColumn = "id", entityColumn = "itemId",
-        associateBy = Junction(
-            value = ReceiptCrossRef::class,
-            parentColumn = "receiptId",
-            entityColumn = "receiptItemId"
-        )
+        parentColumn = "id", entityColumn = "receiptId",
     )
     val items: List<ReceiptItem> = listOf()
 )
@@ -26,10 +21,10 @@ interface ReceiptsDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun setReceiptInfo(receiptInfo: ReceiptInfo): Long // Row Id
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun setReceiptItemInfos(receiptItems: List<ReceiptItemInfo>): List<Long>
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    suspend fun setReceiptItemInfos(receiptItems: List<ReceiptItemName>): List<Long>
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun setReceiptMappings(receiptRefs: List<ReceiptCrossRef>)
 
     suspend fun insertReceipt(receipt: Receipt) {
@@ -40,20 +35,30 @@ interface ReceiptsDao {
                 receipt.date
             )
         )
-        val itemIds = setReceiptItemInfos(receipt.items.map {
-            ReceiptItemInfo(
-                it.itemId,
-                it.name
+        val newItems = receipt.items.filter { it.itemId == 0L }
+        val itemIds = setReceiptItemInfos(newItems.map {
+            ReceiptItemName(
+                name = it.name
             )
         })
-        val mappings = itemIds.zip(receipt.items.map { it.price })
-            .map { (id, price) -> ReceiptCrossRef(receiptId, id, price) }
+        val mappings =
+            itemIds.zip(newItems.map { it.price }).map { (id, price) ->
+                ReceiptCrossRef(
+                    receiptId,
+                    id,
+                    price
+                )
+            } + receipt.items.filter { it.itemId != 0L }
+                .map { ReceiptCrossRef(receiptId, it.itemId, it.price) }
         setReceiptMappings(mappings)
     }
 
     @Transaction
     @Query("SELECT * FROM receipts")
     fun getReceipts(): Flow<List<Receipt>>
+
+    @Query("SELECT * FROM receipt_items")
+    fun getItemNames(): Flow<List<ReceiptItemName>>
 
     @Transaction
     @Query("SELECT * FROM receipts WHERE receipts.id = :id")
