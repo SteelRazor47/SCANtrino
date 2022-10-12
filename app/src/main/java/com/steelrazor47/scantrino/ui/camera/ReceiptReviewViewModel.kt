@@ -46,7 +46,7 @@ class ReceiptReviewViewModel @Inject constructor(private val receiptsRepo: Recei
                         receiptsRepo.getMostSimilarItem(input) ?: ReceiptItemName(name = input)
                     val price = sortedList.last().text.replace("""[^\-\d]""".toRegex(), "")
                         .toIntOrNull() ?: 0
-                    ReceiptItem(itemId = itemName.itemId, name = itemName.name, price = price)
+                    ReceiptItem(name = itemName, price = price)
                 }
 
             receiptReview = Receipt(items = items)
@@ -62,7 +62,7 @@ class ReceiptReviewViewModel @Inject constructor(private val receiptsRepo: Recei
 
     fun addItemName(itemName: ReceiptItemName, onAdded: (ReceiptItemName) -> Unit = {}) {
         viewModelScope.launch {
-            val addedName = receiptsRepo.addItemName(ReceiptItemName(name = itemName.name))
+            val addedName = receiptsRepo.addItemName(itemName)
             onAdded(addedName)
         }
     }

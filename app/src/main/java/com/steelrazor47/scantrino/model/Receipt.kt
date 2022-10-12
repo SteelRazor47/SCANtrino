@@ -28,7 +28,13 @@ data class ReceiptItem(
     val itemId: Long = 0,
     val name: String = "",
     val price: Int = 0
-)
+) {
+    constructor(name: ReceiptItemName, price: Int) :
+            this(itemId = name.itemId, name = name.name, price = price)
+
+    fun with(name: ReceiptItemName): ReceiptItem = copy(itemId = name.itemId, name = name.name)
+    fun with(price: Int): ReceiptItem = copy(price = price)
+}
 
 data class Receipt(
 //    @Embedded

@@ -37,6 +37,11 @@ fun ReviewItem(
                 value = item.name,
                 onValueChange = { onNameChanged(ReceiptItemName(itemId = 0, name = it)) },
                 isError = item.itemId == 0L,
+                trailingIcon = {
+                    ExposedDropdownMenuDefaults.TrailingIcon(
+                        expanded = expanded
+                    )
+                },
             )
             ExposedDropdownMenu(
                 expanded = expanded,

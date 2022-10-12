@@ -14,6 +14,9 @@ interface ReceiptsDao {
     suspend fun setReceiptItemNames(receiptItems: List<ReceiptItemName>): List<Long>
 
     @Insert(onConflict = OnConflictStrategy.ABORT)
+    suspend fun setReceiptItemName(name: ReceiptItemName): Long
+
+    @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun setReceiptMappings(receiptRefs: List<ReceiptCrossRef>)
 
     @Transaction
@@ -59,26 +62,14 @@ interface ReceiptsDao {
 }
 
 class ReceiptsDaoMock : ReceiptsDao {
-    override suspend fun setReceiptInfo(receiptInfo: ReceiptInfo): Long {
-        TODO("Not yet implemented")
-    }
-
-    override suspend fun setReceiptItemNames(receiptItems: List<ReceiptItemName>): List<Long> {
-        TODO("Not yet implemented")
-    }
-
-    override suspend fun setReceiptMappings(receiptRefs: List<ReceiptCrossRef>) {
-        TODO("Not yet implemented")
-    }
+    override suspend fun setReceiptInfo(receiptInfo: ReceiptInfo): Long = 0L
+    override suspend fun setReceiptItemNames(receiptItems: List<ReceiptItemName>) = listOf<Long>()
+    override suspend fun setReceiptItemName(name: ReceiptItemName): Long = 0L
+    override suspend fun setReceiptMappings(receiptRefs: List<ReceiptCrossRef>) {}
 
     override fun getReceipt(id: Long): Flow<Receipt?> = flowOf(receipt)
-
     override fun getReceipts() = flowOf(listOf(receipt))
-
-
     override fun getItemNamesFlow() = flowOf(itemNames)
-
-
     override suspend fun getItemNames() = itemNames
 
     companion object {

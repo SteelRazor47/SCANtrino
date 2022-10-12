@@ -20,6 +20,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.steelrazor47.scantrino.model.ReceiptItem
 import com.steelrazor47.scantrino.model.ReceiptsDaoMock
 import com.steelrazor47.scantrino.model.ReceiptsRepo
+import com.steelrazor47.scantrino.utils.set
 
 @Composable
 fun ReceiptReviewScreen(
@@ -34,15 +35,10 @@ fun ReceiptReviewScreen(
                 ReviewItem(
                     item = item,
                     itemsList = viewModel.getSimilarItems(item.name, 10),
-                    onNameChanged = {
-                        items[items.indexOf(item)] = item.copy(itemId = it.itemId, name = it.name)
-                    },
-                    onPriceChanged = { items[items.indexOf(item)] = item.copy(price = it) },
+                    onNameChanged = { name -> items[item] = item.with(name) },
+                    onPriceChanged = { items[item] = item.with(price = it) },
                     onAddName = {
-                        viewModel.addItemName(it) { itemName ->
-                            items[items.indexOf(item)] =
-                                item.copy(itemId = itemName.itemId, name = itemName.name)
-                        }
+                        viewModel.addItemName(it) { name -> items[item] = item.with(name) }
                     },
                     onDelete = { items.remove(item) }
                 )
@@ -59,21 +55,19 @@ fun ReceiptReviewScreen(
             }
         }
 
-
-        FloatingActionButton(
-            onClick = {
-                if (items.any { it.itemId == 0L || it.price == -1 }) return@FloatingActionButton
-
-                viewModel.receiptReview = viewModel.receiptReview.copy(items = items)
-                viewModel.saveReviewReceipt()
-                onReceiptSaved()
-            },
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(16.dp)
-        ) {
-            Icon(Icons.Filled.Check, "")
-        }
+        if (items.all { it.itemId != 0L && it.price != -1 })
+            FloatingActionButton(
+                onClick = {
+                    viewModel.receiptReview = viewModel.receiptReview.copy(items = items)
+                    viewModel.saveReviewReceipt()
+                    onReceiptSaved()
+                },
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(16.dp)
+            ) {
+                Icon(Icons.Filled.Check, "")
+            }
     }
 }
 
