@@ -1,7 +1,10 @@
 ﻿package com.steelrazor47.scantrino.utils
 
+import java.text.NumberFormat
 import kotlin.math.max
 import kotlin.math.min
+
+val currencyFormatter = NumberFormat.getCurrencyInstance()
 
 fun String.similarity(other: String) =
     1 - uppercase().levenshtein(other.uppercase()) / max(length, other.length).toFloat()

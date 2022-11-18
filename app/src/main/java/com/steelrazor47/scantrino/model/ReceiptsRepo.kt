@@ -2,11 +2,16 @@
 
 import com.steelrazor47.scantrino.utils.similarity
 import kotlinx.coroutines.flow.map
+import java.time.YearMonth
 import javax.inject.Inject
-import kotlin.math.max
-import kotlin.math.min
 
 class ReceiptsRepo @Inject constructor(private val receiptsDao: ReceiptsDao) {
+    fun getReceipt(id: Long) = receiptsDao.getReceipt(id)
+
+    fun getReceiptsWithMonth(month: YearMonth) =
+        receiptsDao.getReceipts().map { list ->
+            list.filter { YearMonth.from(it.date) == month }
+        }
 
     fun getSimilarItems(name: String, count: Int) =
         receiptsDao.getItemNamesFlow()

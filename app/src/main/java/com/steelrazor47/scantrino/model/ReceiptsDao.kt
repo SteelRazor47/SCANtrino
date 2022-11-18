@@ -62,10 +62,10 @@ interface ReceiptsDao {
 }
 
 class ReceiptsDaoMock : ReceiptsDao {
-    override suspend fun setReceiptInfo(receiptInfo: ReceiptInfo): Long = 0L
-    override suspend fun setReceiptItemNames(receiptItems: List<ReceiptItemName>) = listOf<Long>()
-    override suspend fun setReceiptItemName(name: ReceiptItemName): Long = 0L
-    override suspend fun setReceiptMappings(receiptRefs: List<ReceiptCrossRef>) {}
+    override suspend fun setReceiptInfo(receiptInfo: ReceiptInfo): Long = TODO()
+    override suspend fun setReceiptItemNames(receiptItems: List<ReceiptItemName>) = TODO()
+    override suspend fun setReceiptItemName(name: ReceiptItemName): Long = TODO()
+    override suspend fun setReceiptMappings(receiptRefs: List<ReceiptCrossRef>) = TODO()
 
     override fun getReceipt(id: Long): Flow<Receipt?> = flowOf(receipt)
     override fun getReceipts() = flowOf(listOf(receipt))
@@ -82,6 +82,12 @@ class ReceiptsDaoMock : ReceiptsDao {
         val items = itemNames.zip(listOf(23, 532, 57, 23))
             .map { (item, price) -> ReceiptItem(12, item.itemId, item.name, price) }
         val receipt = Receipt(12, "Conad", LocalDateTime.parse("2022-04-17T16:53:00"), items)
+        val receipts =
+            listOf(
+                receipt,
+                receipt.copy(id = 13, store = "Coop"),
+                receipt.copy(id = 14, store = "Penny")
+            )
         val invalidReceipt =
             receipt.copy(items = items + listOf(ReceiptItem(12, 0, "Strawberry", -1)))
     }

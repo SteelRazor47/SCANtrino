@@ -46,7 +46,10 @@ data class Receipt(
         parentColumn = "id", entityColumn = "receiptId",
     )
     val items: List<ReceiptItem> = listOf()
-)
+) {
+    @Ignore
+    val total: Int = items.sumOf { it.price }
+}
 
 
 @Entity(
