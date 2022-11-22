@@ -1,6 +1,7 @@
 ﻿package com.steelrazor47.scantrino.ui.camera
 
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
@@ -8,6 +9,8 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Euro
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import com.steelrazor47.scantrino.model.ReceiptItem
@@ -32,11 +35,16 @@ fun ReviewItem(
         var expanded by remember { mutableStateOf(false) }
         val list by itemsList.collectAsState(listOf())
 
-        ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
+        ExposedDropdownMenuBox(
+            expanded = expanded,
+            onExpandedChange = { expanded = !expanded },
+            modifier = Modifier.weight(1.5f)
+        ) {
             TextField(
                 value = item.name,
                 onValueChange = { onNameChanged(ReceiptItemName(itemId = 0, name = it)) },
                 isError = item.itemId == 0L,
+                singleLine = true,
                 trailingIcon = {
                     ExposedDropdownMenuDefaults.TrailingIcon(
                         expanded = expanded
@@ -84,11 +92,14 @@ fun ReviewItem(
                 }
             },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            modifier = Modifier
+                .weight(1.0f)
+                .wrapContentWidth(Alignment.End)
         )
     }
 }
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun ReviewItemPreview() {
     ScantrinoTheme {

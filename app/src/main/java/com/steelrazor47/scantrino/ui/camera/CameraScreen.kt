@@ -26,12 +26,7 @@ fun CameraScreen(
 
         Canvas(modifier = Modifier.fillMaxSize()) {
             viewModel.boundingBoxes.forEach {
-                this.drawRect(
-                    color = Color.Red,
-                    topLeft = it.topLeft,
-                    size = it.size,
-                    style = Stroke(4.0f)
-                )
+                this.drawPath(path = it.path, color = Color.Red, style = Stroke(4.0f))
             }
         }
         FloatingActionButton(

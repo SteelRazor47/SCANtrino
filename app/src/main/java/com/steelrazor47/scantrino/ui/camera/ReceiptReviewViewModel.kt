@@ -1,10 +1,12 @@
 package com.steelrazor47.scantrino.ui.camera
 
+import android.graphics.Point
+import android.graphics.PointF
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.geometry.Rect
-import androidx.compose.ui.graphics.toComposeRect
+import androidx.compose.ui.graphics.Path
+import androidx.core.graphics.toPointF
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.mlkit.vision.text.Text
@@ -21,7 +23,7 @@ import kotlin.math.roundToInt
 class ReceiptReviewViewModel @Inject constructor(private val receiptsRepo: ReceiptsRepo) :
     ViewModel() {
     private var lines: List<Text.Line> = listOf()
-    var boundingBoxes by mutableStateOf(listOf<Rect>())
+    var boundingBoxes by mutableStateOf(listOf<BoundingBox>())
         private set
     var receiptReview: Receipt by mutableStateOf(Receipt())
 
@@ -29,7 +31,7 @@ class ReceiptReviewViewModel @Inject constructor(private val receiptsRepo: Recei
 
     fun setAnalyzedText(text: Text) {
         lines = text.textBlocks.flatMap { it.lines }.filter { it.boundingBox != null }
-        boundingBoxes = lines.map { it.boundingBox!!.toComposeRect() }
+        boundingBoxes = lines.mapNotNull { line -> line.cornerPoints?.let { BoundingBox(it) } }
     }
 
     fun setReviewReceipt() {
@@ -65,5 +67,31 @@ class ReceiptReviewViewModel @Inject constructor(private val receiptsRepo: Recei
             val addedName = receiptsRepo.addItemName(itemName)
             onAdded(addedName)
         }
+    }
+}
+
+data class BoundingBox(
+    private val points: List<PointF>,
+    val rotation: Float
+) {
+    constructor(points: Array<Point>, rotation: Float = 0.0f) : this(
+        points.map { it.toPointF() },
+        rotation
+    )
+
+    private val topLeft = points[0]
+    private val topRight = points[1]
+    private val bottomRight = points[2]
+    private val bottomLeft = points[3]
+
+    val path = Path().apply {
+        moveTo(topLeft.x, topLeft.y)
+        lineTo(topRight.x, topRight.y)
+        moveTo(topRight.x, topRight.y)
+        lineTo(bottomRight.x, bottomRight.y)
+        moveTo(bottomRight.x, bottomRight.y)
+        lineTo(bottomLeft.x, bottomLeft.y)
+        moveTo(bottomLeft.x, bottomLeft.y)
+        lineTo(topLeft.x, topLeft.y)
     }
 }
