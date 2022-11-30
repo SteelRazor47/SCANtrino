@@ -27,14 +27,17 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.steelrazor47.scantrino.ui.camera.CameraScreen
-import com.steelrazor47.scantrino.ui.camera.ReceiptReviewViewModel
 import com.steelrazor47.scantrino.ui.camera.ReceiptReviewScreen
+import com.steelrazor47.scantrino.ui.camera.ReceiptReviewViewModel
 import com.steelrazor47.scantrino.ui.overview.OverviewScreen
+import com.steelrazor47.scantrino.ui.receipt.ReceiptScreen
 import com.steelrazor47.scantrino.ui.theme.ScantrinoTheme
 import com.steelrazor47.scantrino.utils.Routes
 import dagger.hilt.android.AndroidEntryPoint
@@ -98,7 +101,17 @@ fun ScantrinoApp() {
                 startDestination = Routes.Overview.route,
                 modifier = Modifier.padding(padding)
             ) {
-                composable(route = Routes.Overview.route) { OverviewScreen() }
+                composable(route = Routes.Overview.route) {
+                    OverviewScreen(
+                        onReceiptClicked = { id -> navController.navigate("receipt/$id") }
+                    )
+                }
+                composable(
+                    route = "receipt/{receiptId}",
+                    arguments = listOf(navArgument("receiptId") { type = NavType.LongType })
+                ) {
+                    ReceiptScreen(onReceiptDeleted = { navController.navigateUpTo(Routes.Overview.route) })
+                }
                 composable(route = Routes.Camera.route) {
                     CameraScreen(
                         onReviewReceipt = {
