@@ -10,6 +10,7 @@ import androidx.compose.material.MaterialTheme.typography
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -50,8 +51,15 @@ fun ReceiptScreen(
 
     Column(modifier = Modifier.padding(8.dp)) {
         val dateFormatter = DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL)
-        Text(text = receipt.store, style = typography.h4)
-        Text(text = receipt.date.format(dateFormatter), style = typography.subtitle2)
+        Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween, Alignment.CenterVertically) {
+            Column {
+                Text(text = receipt.store, style = typography.h4)
+                Text(text = receipt.date.format(dateFormatter), style = typography.subtitle2)
+            }
+            TextButton(onClick = onReceiptDeleted) {
+                Text("Delete")
+            }
+        }
         Spacer(
             modifier = Modifier
                 .padding(vertical = 8.dp)
@@ -59,37 +67,15 @@ fun ReceiptScreen(
                 .fillMaxWidth()
                 .background(MaterialTheme.colors.onBackground)
         )
-        var expanded by remember { mutableStateOf(false) }
-        ExposedDropdownMenuBox(
-            expanded = expanded,
-            onExpandedChange = { expanded = !expanded },
-        ) {
-            TextField(
-                value = timeFilter.displayName,
-                onValueChange = { },
-                readOnly = true,
-                singleLine = true,
-                trailingIcon = {
-                    ExposedDropdownMenuDefaults.TrailingIcon(
-                        expanded = expanded
-                    )
-                },
-            )
-            ExposedDropdownMenu(
-                expanded = expanded,
-                onDismissRequest = { expanded = false },
-            ) {
-                TimeFilter.values().forEach {
-                    DropdownMenuItem(onClick = { onTimeFilterChanged(it); expanded = false }) {
-                        Text(it.displayName)
-                    }
-                }
 
+        Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween) {
+            TimeFilter.values().forEach {
+                FilterChip(selected = timeFilter == it, onClick = { onTimeFilterChanged(it) }) {
+                    Text(it.displayName)
+                }
             }
         }
-        TextButton(onClick = onReceiptDeleted) {
-            Text("Delete")
-        }
+
         LazyColumn(verticalArrangement = Arrangement.spacedBy(16.dp)) {
             items(receipt.items) { item ->
                 val avg = averages[item.itemId] ?: Double.NaN
@@ -116,6 +102,11 @@ private fun ItemCard(item: ReceiptItem, priceVar: Double) {
             if (!priceVar.isNaN())
                 Text(
                     text = NumberFormat.getPercentInstance().format(priceVar),
+                    color = when {
+                        priceVar < 0.0 -> MaterialTheme.colors.primary
+                        priceVar > 0.0 -> MaterialTheme.colors.error
+                        else -> Color.Unspecified
+                    },
                     style = typography.h6,
                     modifier = Modifier.weight(1f), textAlign = TextAlign.Center
                 )
@@ -136,8 +127,8 @@ fun ReceiptScreenPreview() {
     ScantrinoTheme {
         Surface {
             ReceiptScreen(
-                receipt = ReceiptsDaoMock.receipt,
-                averages = ReceiptsDaoMock.itemAverages,
+                receipt = DataMock.receipt,
+                averages = DataMock.itemAverages,
                 timeFilter = TimeFilter.OneWeek,
                 onTimeFilterChanged = {},
                 onReceiptDeleted = {}

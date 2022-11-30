@@ -31,6 +31,7 @@ class ReceiptViewModel @Inject constructor(
     val itemPriceAverages = timeFilter.flatMapLatest {
         when (it) {
             TimeFilter.LastSeen -> receiptsRepo.getPreviousItemPrices(id)
+            TimeFilter.Always -> receiptsRepo.getItemPriceAverages(id)
             else -> receiptsRepo.getItemPriceAverages(
                 id, LocalDate.now() - it.period, LocalDate.now()
             )
@@ -41,7 +42,9 @@ class ReceiptViewModel @Inject constructor(
 }
 
 
-enum class TimeFilter(val displayName: String, val period: Period) {
-    LastSeen("last seen", Period.ZERO),
-    OneWeek("1w", Period.ofWeeks(1))
+enum class TimeFilter(val displayName: String, val period: Period?) {
+    LastSeen("Last seen", null),
+    OneWeek("One week", Period.ofWeeks(1)),
+    OneMonth("One month", Period.ofMonths(1)),
+    Always("Always", null)
 }

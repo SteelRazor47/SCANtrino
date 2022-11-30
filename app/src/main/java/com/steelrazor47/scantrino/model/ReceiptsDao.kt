@@ -2,7 +2,6 @@ package com.steelrazor47.scantrino.model
 
 import androidx.room.*
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flowOf
 import java.time.LocalDateTime
 
 @Dao
@@ -69,6 +68,16 @@ interface ReceiptsDao {
         endDate: String
     ): Flow<Map<Long, Double>>
 
+
+    @MapInfo(keyColumn = "receiptItemId", valueColumn = "average")
+    @Query(
+        """SELECT receiptItemId, SUM(price)/COUNT(receiptItemId) AS average
+            FROM receipt_cross_ref CR JOIN receipts R ON CR.receiptId = R.id
+            WHERE CR.receiptItemId IN (SELECT receiptItemId FROM receipt_cross_ref WHERE receiptId = :receiptId)
+            GROUP BY receiptItemId"""
+    )
+    fun getItemsPriceAverage(receiptId: Long): Flow<Map<Long, Double>>
+
     @MapInfo(keyColumn = "receiptItemId", valueColumn = "price")
     @Query(
         """
@@ -95,25 +104,7 @@ interface ReceiptsDao {
     suspend fun deleteReceipt(id: Long)
 }
 
-class ReceiptsDaoMock : ReceiptsDao {
-    override suspend fun setReceiptInfo(receiptInfo: ReceiptInfo): Long = TODO()
-    override suspend fun setReceiptItemNames(receiptItems: List<ReceiptItemName>) = TODO()
-    override suspend fun setReceiptItemName(name: ReceiptItemName): Long = TODO()
-    override suspend fun setReceiptMappings(receiptRefs: List<ReceiptCrossRef>) = TODO()
-    override suspend fun deleteReceipt(id: Long) = TODO()
-
-    override fun getReceipt(id: Long): Flow<Receipt?> = flowOf(receipt)
-    override fun getReceipts() = flowOf(listOf(receipt))
-    override fun getItemNamesFlow() = flowOf(itemNames)
-    override suspend fun getItemNames() = itemNames
-
-    override fun getItemsPriceAverage(
-        receiptId: Long,
-        startDate: String,
-        endDate: String
-    ): Flow<Map<Long, Double>> = flowOf(itemAverages)
-
-    override fun getPreviousItemPrices(receiptId: Long): Flow<Map<Long, Double>> = TODO()
+class DataMock {
 
     companion object {
         val itemNames = listOf(

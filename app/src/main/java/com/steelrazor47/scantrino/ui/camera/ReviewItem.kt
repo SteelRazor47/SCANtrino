@@ -13,9 +13,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
+import com.steelrazor47.scantrino.model.DataMock
 import com.steelrazor47.scantrino.model.ReceiptItem
 import com.steelrazor47.scantrino.model.ReceiptItemName
-import com.steelrazor47.scantrino.model.ReceiptsDaoMock
 import com.steelrazor47.scantrino.ui.theme.ScantrinoTheme
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
@@ -103,6 +103,6 @@ fun ReviewItem(
 @Composable
 fun ReviewItemPreview() {
     ScantrinoTheme {
-        ReviewItem(item = ReceiptsDaoMock.items[0], itemsList = flowOf(ReceiptsDaoMock.itemNames))
+        ReviewItem(item = DataMock.items[0], itemsList = flowOf(DataMock.itemNames))
     }
 }

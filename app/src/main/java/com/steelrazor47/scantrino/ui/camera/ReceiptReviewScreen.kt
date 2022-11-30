@@ -1,25 +1,23 @@
 package com.steelrazor47.scantrino.ui.camera
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.*
+import androidx.compose.material.FloatingActionButton
+import androidx.compose.material.Icon
+import androidx.compose.material.Text
+import androidx.compose.material.TextButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.steelrazor47.scantrino.model.ReceiptItem
-import com.steelrazor47.scantrino.model.ReceiptsDaoMock
-import com.steelrazor47.scantrino.model.ReceiptsRepo
 import com.steelrazor47.scantrino.utils.set
 
 @Composable
@@ -44,14 +42,9 @@ fun ReceiptReviewScreen(
                 )
             }
             item {
-                TextField(
-                    value = "Click to add Item",
-                    onValueChange = {},
-                    readOnly = true,
-                    modifier = Modifier
-                        .clickable { items.add(ReceiptItem()) }
-                        .fillMaxWidth()
-                )
+                TextButton(onClick = { items.add(ReceiptItem()) }) {
+                    Text("Add item")
+                }
             }
         }
 
@@ -69,14 +62,4 @@ fun ReceiptReviewScreen(
                 Icon(Icons.Filled.Check, "")
             }
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun ReceiptReviewScreenPreview() {
-    ReceiptReviewScreen(
-        viewModel = ReceiptReviewViewModel(ReceiptsRepo(ReceiptsDaoMock())).apply {
-            receiptReview = ReceiptsDaoMock.invalidReceipt
-        }
-    )
 }

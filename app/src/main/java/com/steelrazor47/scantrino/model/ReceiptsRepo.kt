@@ -21,6 +21,9 @@ class ReceiptsRepo @Inject constructor(private val receiptsDao: ReceiptsDao) {
     fun getItemPriceAverages(id: Long, startDate: LocalDate, endDate: LocalDate) =
         receiptsDao.getItemsPriceAverage(id, startDate.toString(), endDate.toString())
 
+    fun getItemPriceAverages(id: Long) =
+        receiptsDao.getItemsPriceAverage(id)
+
     fun getPreviousItemPrices(receiptId: Long) = receiptsDao.getPreviousItemPrices(receiptId)
 
     suspend fun getMostSimilarItem(name: String) =

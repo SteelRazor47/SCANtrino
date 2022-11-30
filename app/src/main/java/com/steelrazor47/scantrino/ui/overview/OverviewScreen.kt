@@ -15,8 +15,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.steelrazor47.scantrino.model.DataMock
 import com.steelrazor47.scantrino.model.Receipt
-import com.steelrazor47.scantrino.model.ReceiptsDaoMock
 import com.steelrazor47.scantrino.ui.theme.ScantrinoTheme
 import com.steelrazor47.scantrino.utils.currencyFormatter
 import java.time.Month
@@ -30,7 +30,8 @@ fun OverviewScreen(
     viewModel: OverviewViewModel = hiltViewModel(),
     onReceiptClicked: (Long) -> Unit = {}
 ) {
-    OverviewScreen(viewModel.uiState, { viewModel.changeMonth(it) }, onReceiptClicked)
+    val uiState by viewModel.uiState.collectAsState(OverviewUiState())
+    OverviewScreen(uiState, { viewModel.changeMonth(it) }, onReceiptClicked)
 }
 
 
@@ -135,7 +136,7 @@ fun OverviewScreenPreview() {
             OverviewScreen(
                 OverviewUiState(
                     YearMonth.of(2022, Month.APRIL),
-                    ReceiptsDaoMock.receipts
+                    DataMock.receipts
                 )
             )
         }
