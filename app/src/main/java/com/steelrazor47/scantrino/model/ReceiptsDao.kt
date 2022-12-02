@@ -93,10 +93,6 @@ interface ReceiptsDao {
     )
     fun getPreviousItemPrices(receiptId: Long): Flow<Map<Long, Double>>
 
-
-    @Query("SELECT * FROM receipt_item_names")
-    fun getItemNamesFlow(): Flow<List<ReceiptItemName>>
-
     @Query("SELECT * FROM receipt_item_names")
     suspend fun getItemNames(): List<ReceiptItemName>
 

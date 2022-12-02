@@ -3,6 +3,7 @@ package com.steelrazor47.scantrino.ui.camera
 import android.graphics.Point
 import android.graphics.PointF
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Path
@@ -14,6 +15,7 @@ import com.steelrazor47.scantrino.model.Receipt
 import com.steelrazor47.scantrino.model.ReceiptItem
 import com.steelrazor47.scantrino.model.ReceiptItemName
 import com.steelrazor47.scantrino.model.ReceiptsRepo
+import com.steelrazor47.scantrino.utils.set
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -25,9 +27,8 @@ class ReceiptReviewViewModel @Inject constructor(private val receiptsRepo: Recei
     private var lines: List<Text.Line> = listOf()
     var boundingBoxes by mutableStateOf(listOf<BoundingBox>())
         private set
-    var receiptReview: Receipt by mutableStateOf(Receipt())
-
-    fun getSimilarItems(name: String, count: Int) = receiptsRepo.getSimilarItems(name, count)
+    private val _items = mutableStateListOf(ReviewItemUiState(ReceiptItem(), listOf()))
+    val items: List<ReviewItemUiState> = _items
 
     fun setAnalyzedText(text: Text) {
         lines = text.textBlocks.flatMap { it.lines }.filter { it.boundingBox != null }
@@ -38,7 +39,7 @@ class ReceiptReviewViewModel @Inject constructor(private val receiptsRepo: Recei
         viewModelScope.launch {
             val average = lines.map { it.boundingBox!!.height() }.average()
 
-            val items = lines.sortedBy { it.boundingBox!!.top }
+            val newItems = lines.sortedBy { it.boundingBox!!.top }
                 .groupBy { (it.boundingBox!!.centerY() / average).roundToInt() }
                 .filter { (_, list) -> list.size >= 2 }
                 .map { (_, list) ->
@@ -46,26 +47,47 @@ class ReceiptReviewViewModel @Inject constructor(private val receiptsRepo: Recei
                     val input = sortedList.first().text
                     val itemName =
                         receiptsRepo.getMostSimilarItem(input) ?: ReceiptItemName(name = input)
+                    val suggestedNames = receiptsRepo.getSimilarItems(input, 20)
                     val price = sortedList.last().text.replace("""[^\-\d]""".toRegex(), "")
                         .toIntOrNull() ?: 0
-                    ReceiptItem(name = itemName, price = price)
+                    ReviewItemUiState(ReceiptItem(name = itemName, price = price), suggestedNames)
                 }
 
-            receiptReview = Receipt(items = items)
+            _items.clear()
+            _items.addAll(newItems)
         }
     }
 
     fun saveReviewReceipt() {
         viewModelScope.launch {
-            receiptsRepo.insertReceipt(receiptReview)
-            receiptReview = Receipt()
+            val savedItems = _items.map {
+                if (it.item.itemId != 0L)
+                    return@map it.item
+                val id = receiptsRepo.addItemName(ReceiptItemName(name = it.item.name))
+                val newItemName = ReceiptItemName(id, it.item.name)
+                it.item.with(newItemName)
+            }
+            receiptsRepo.insertReceipt(Receipt(items = savedItems))
         }
     }
 
-    fun addItemName(itemName: ReceiptItemName, onAdded: (ReceiptItemName) -> Unit = {}) {
+    fun addItem(item: ReviewItemUiState = ReviewItemUiState(ReceiptItem(), listOf())) {
         viewModelScope.launch {
-            val addedName = receiptsRepo.addItemName(itemName)
-            onAdded(addedName)
+            _items.add(item)
+        }
+    }
+
+    fun removeItem(item: ReviewItemUiState) {
+        _items.remove(item)
+    }
+
+    fun changeItem(old: ReviewItemUiState, new: ReviewItemUiState) {
+        viewModelScope.launch {
+            _items[old] =
+                if (old.item.name != new.item.name)
+                    new.copy(suggestedNames = receiptsRepo.getSimilarItems(new.item.name, 20))
+                else
+                    new
         }
     }
 }
@@ -95,3 +117,9 @@ data class BoundingBox(
         lineTo(topLeft.x, topLeft.y)
     }
 }
+
+data class ReviewItemUiState(
+    val item: ReceiptItem,
+    val suggestedNames: List<ReceiptItemName>,
+    val confirmed: Boolean = false
+)

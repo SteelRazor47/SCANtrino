@@ -1,11 +1,11 @@
 ﻿package com.steelrazor47.scantrino.ui.camera
 
+import android.content.res.Configuration
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Euro
 import androidx.compose.runtime.*
@@ -14,27 +14,26 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import com.steelrazor47.scantrino.model.DataMock
-import com.steelrazor47.scantrino.model.ReceiptItem
 import com.steelrazor47.scantrino.model.ReceiptItemName
 import com.steelrazor47.scantrino.ui.theme.ScantrinoTheme
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flowOf
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun ReviewItem(
-    item: ReceiptItem,
-    itemsList: Flow<List<ReceiptItemName>>,
-    onNameChanged: (ReceiptItemName) -> Unit = {},
-    onPriceChanged: (Int) -> Unit = {},
-    onAddName: (ReceiptItemName) -> Unit = {},
+    reviewItemUiState: ReviewItemUiState,
+    onItemChanged: (new: ReviewItemUiState) -> Unit = { },
     onDelete: () -> Unit = {}
 ) {
-    Row {
-        var priceText by remember { mutableStateOf((item.price / 100.0f).toString()) }
+    Row(verticalAlignment = Alignment.CenterVertically) {
         var expanded by remember { mutableStateOf(false) }
-        val list by itemsList.collectAsState(listOf())
+        val item = reviewItemUiState.item
+        val suggestedItemsList = reviewItemUiState.suggestedNames
+        val isNameConfirmed = reviewItemUiState.confirmed
 
+        Checkbox(
+            checked = isNameConfirmed,
+            onCheckedChange = { onItemChanged(reviewItemUiState.copy(confirmed = it)) }
+        )
         ExposedDropdownMenuBox(
             expanded = expanded,
             onExpandedChange = { expanded = !expanded },
@@ -42,48 +41,49 @@ fun ReviewItem(
         ) {
             TextField(
                 value = item.name,
-                onValueChange = { onNameChanged(ReceiptItemName(itemId = 0, name = it)) },
-                isError = item.itemId == 0L,
-                singleLine = true,
-                trailingIcon = {
-                    ExposedDropdownMenuDefaults.TrailingIcon(
-                        expanded = expanded
+                onValueChange = {
+                    val new = reviewItemUiState.copy(
+                        item = item.with(ReceiptItemName(name = it)),
+                        confirmed = false
                     )
+                    onItemChanged(new)
                 },
+                singleLine = true,
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) }
             )
-            ExposedDropdownMenu(
-                expanded = expanded,
-                onDismissRequest = { expanded = false },
-            ) {
-                list.forEach {
-                    DropdownMenuItem(onClick = { onNameChanged(it); expanded = false }) {
-                        Text("${it.itemId}: ${it.name}")
+            if (suggestedItemsList.isNotEmpty())
+                ExposedDropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false },
+                ) {
+                    suggestedItemsList.forEach {
+                        DropdownMenuItem(onClick = {
+                            val new = reviewItemUiState.copy(
+                                item = item.with(it),
+                                confirmed = true
+                            )
+                            onItemChanged(new)
+                            expanded = false
+                        }) {
+                            Text("${it.itemId}: ${it.name}")
+                        }
                     }
                 }
-                if (item.itemId == 0L)
-                    DropdownMenuItem(onClick = {
-                        onAddName(ReceiptItemName(name = item.name))
-                        expanded = false
-                    }) {
-                        Text("Add: ${item.name}")
-                        Icon(Icons.Filled.Add, contentDescription = "")
-                    }
-            }
         }
+
+        /* The price field should manage its own text, while sending either the correct value
+         or an error value upstream. Since item.price cannot represent invalid values it
+         cannot be used as the TextField state, which must be stored locally */
+        var priceText by remember { mutableStateOf((item.price / 100.0f).toString()) }
         TextField(
             value = priceText,
             onValueChange = { input ->
-                try {
-                    // Converts string of currency into cents
-                    val price = input.toFloat().times(100).toInt()
-                    onPriceChanged(price)
-                } catch (e: Exception) {
-                    onPriceChanged(-1)
-                } finally {
-                    priceText = input
-                }
+                val price = input.toFloatOrNull()?.times(100)?.toInt() ?: Int.MIN_VALUE
+                val new = reviewItemUiState.copy(item = item.with(price))
+                priceText = input
+                onItemChanged(new)
             },
-            isError = item.price == -1,
+            isError = item.price == Int.MIN_VALUE,
             singleLine = true,
             leadingIcon = { Icon(Icons.Filled.Euro, "") },
             trailingIcon = {
@@ -99,10 +99,13 @@ fun ReviewItem(
     }
 }
 
-@Preview(showBackground = true, showSystemUi = true)
+@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_NO)
 @Composable
 fun ReviewItemPreview() {
     ScantrinoTheme {
-        ReviewItem(item = DataMock.items[0], itemsList = flowOf(DataMock.itemNames))
+        Surface {
+            ReviewItem(ReviewItemUiState(DataMock.items[0], listOf()))
+        }
     }
 }
