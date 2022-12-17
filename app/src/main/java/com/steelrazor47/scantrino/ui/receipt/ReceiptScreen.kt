@@ -78,7 +78,7 @@ fun ReceiptScreen(
 
         LazyColumn(verticalArrangement = Arrangement.spacedBy(16.dp)) {
             items(receipt.items) { item ->
-                val avg = averages[item.itemId] ?: Double.NaN
+                val avg = averages[item.itemNameId] ?: Double.NaN
                 val priceVar = item.price / avg - 1
                 ItemCard(item, priceVar)
             }

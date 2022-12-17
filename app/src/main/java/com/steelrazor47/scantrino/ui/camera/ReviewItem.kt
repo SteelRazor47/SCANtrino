@@ -14,7 +14,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import com.steelrazor47.scantrino.model.DataMock
-import com.steelrazor47.scantrino.model.ReceiptItemName
 import com.steelrazor47.scantrino.ui.theme.ScantrinoTheme
 
 @OptIn(ExperimentalMaterialApi::class)
@@ -43,7 +42,7 @@ fun ReviewItem(
                 value = item.name,
                 onValueChange = {
                     val new = reviewItemUiState.copy(
-                        item = item.with(ReceiptItemName(name = it)),
+                        item = item.copy(name = it),
                         confirmed = false
                     )
                     onItemChanged(new)
@@ -59,13 +58,13 @@ fun ReviewItem(
                     suggestedItemsList.forEach {
                         DropdownMenuItem(onClick = {
                             val new = reviewItemUiState.copy(
-                                item = item.with(it),
+                                item = item.copy(name = it),
                                 confirmed = true
                             )
                             onItemChanged(new)
                             expanded = false
                         }) {
-                            Text("${it.itemId}: ${it.name}")
+                            Text("${it.id}: ${it.name}")
                         }
                     }
                 }
@@ -79,7 +78,7 @@ fun ReviewItem(
             value = priceText,
             onValueChange = { input ->
                 val price = input.toFloatOrNull()?.times(100)?.toInt() ?: Int.MIN_VALUE
-                val new = reviewItemUiState.copy(item = item.with(price))
+                val new = reviewItemUiState.copy(item = item.copy(price = price))
                 priceText = input
                 onItemChanged(new)
             },

@@ -8,6 +8,7 @@ import javax.inject.Inject
 
 class ReceiptsRepo @Inject constructor(private val receiptsDao: ReceiptsDao) {
     fun getReceipt(id: Long) = receiptsDao.getReceipt(id)
+    fun getItem(receiptId: Long, itemNameId: Long) = receiptsDao.getItem(receiptId, itemNameId)
 
     fun getReceiptsWithMonth(month: YearMonth) =
         receiptsDao.getReceipts().map { list ->
@@ -28,11 +29,11 @@ class ReceiptsRepo @Inject constructor(private val receiptsDao: ReceiptsDao) {
             ?.takeIf { it.name.similarity(name) > 0.90 }
 
     suspend fun getSimilarItems(name: String, count: Int) =
-        receiptsDao.getItemNames().sortedBy { it.name.similarity(name) }.take(count)
+        receiptsDao.getItemNames().sortedByDescending { it.name.similarity(name) }.take(count)
 
     suspend fun insertReceipt(receipt: Receipt) = receiptsDao.insertReceipt(receipt)
 
-    suspend fun addItemName(name: ReceiptItemName) = receiptsDao.setReceiptItemName(name)
+    suspend fun addItemName(name: ItemName) = receiptsDao.setReceiptItemName(name)
 
     suspend fun deleteReceipt(id: Long) = receiptsDao.deleteReceipt(id)
 }

@@ -12,7 +12,7 @@ import java.time.format.DateTimeFormatter
 import javax.inject.Singleton
 
 @Database(
-    entities = [ReceiptItemName::class, ReceiptInfo::class, ReceiptCrossRef::class],
+    entities = [ItemName::class, Details::class, ItemPrice::class],
     views = [ReceiptItem::class],
     version = 1
 )

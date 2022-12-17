@@ -11,9 +11,9 @@ import androidx.core.graphics.toPointF
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.mlkit.vision.text.Text
+import com.steelrazor47.scantrino.model.ItemName
 import com.steelrazor47.scantrino.model.Receipt
 import com.steelrazor47.scantrino.model.ReceiptItem
-import com.steelrazor47.scantrino.model.ReceiptItemName
 import com.steelrazor47.scantrino.model.ReceiptsRepo
 import com.steelrazor47.scantrino.utils.set
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -46,7 +46,7 @@ class ReceiptReviewViewModel @Inject constructor(private val receiptsRepo: Recei
                     val sortedList = list.sortedBy { it.boundingBox!!.left }
                     val input = sortedList.first().text
                     val itemName =
-                        receiptsRepo.getMostSimilarItem(input) ?: ReceiptItemName(name = input)
+                        receiptsRepo.getMostSimilarItem(input) ?: ItemName(name = input)
                     val suggestedNames = receiptsRepo.getSimilarItems(input, 20)
                     val price = sortedList.last().text.replace("""[^\-\d]""".toRegex(), "")
                         .toIntOrNull() ?: 0
@@ -61,11 +61,11 @@ class ReceiptReviewViewModel @Inject constructor(private val receiptsRepo: Recei
     fun saveReviewReceipt() {
         viewModelScope.launch {
             val savedItems = _items.map {
-                if (it.item.itemId != 0L)
+                if (it.item.itemNameId != 0L)
                     return@map it.item
-                val id = receiptsRepo.addItemName(ReceiptItemName(name = it.item.name))
-                val newItemName = ReceiptItemName(id, it.item.name)
-                it.item.with(newItemName)
+                val id = receiptsRepo.addItemName(ItemName(name = it.item.name))
+                val newItemName = ItemName(id, it.item.name)
+                it.item.copy(name = newItemName)
             }
             receiptsRepo.insertReceipt(Receipt(items = savedItems))
         }
@@ -120,6 +120,6 @@ data class BoundingBox(
 
 data class ReviewItemUiState(
     val item: ReceiptItem,
-    val suggestedNames: List<ReceiptItemName>,
+    val suggestedNames: List<ItemName>,
     val confirmed: Boolean = false
 )
