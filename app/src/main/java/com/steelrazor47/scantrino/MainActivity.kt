@@ -108,7 +108,7 @@ fun ScantrinoApp() {
                 }
                 composable(
                     route = "receipt/{receiptId}",
-                    arguments = listOf(navArgument("receiptId") { type = NavType.LongType })
+                    arguments = listOf(navArgument("receiptId") { type = NavType.StringType })
                 ) {
                     ReceiptScreen(onReceiptDeleted = { navController.navigateUpTo(Routes.Overview.route) })
                 }

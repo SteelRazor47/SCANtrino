@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.steelrazor47.scantrino.model.DataMock
 import com.steelrazor47.scantrino.model.Receipt
+import com.steelrazor47.scantrino.model.User
 import com.steelrazor47.scantrino.ui.theme.ScantrinoTheme
 import com.steelrazor47.scantrino.utils.currencyFormatter
 import java.time.Month
@@ -28,18 +29,33 @@ import java.util.*
 @Composable
 fun OverviewScreen(
     viewModel: OverviewViewModel = hiltViewModel(),
-    onReceiptClicked: (Long) -> Unit = {}
+    onReceiptClicked: (String) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState(OverviewUiState())
-    OverviewScreen(uiState, { viewModel.changeMonth(it) }, onReceiptClicked)
+    val user by viewModel.user.collectAsState(User())
+    OverviewScreen(
+        uiState,
+        user,
+        viewModel.hasUser,
+        { viewModel.signin("test@email.com", "password") },
+        { viewModel.changeMonth(it) },
+        onReceiptClicked
+    )
+
+    LaunchedEffect(true) {
+        viewModel.onStart()
+    }
 }
 
 
 @Composable
 fun OverviewScreen(
     uiState: OverviewUiState,
+    user: User = User(),
+    test: Boolean = false,
+    clicked: () -> Unit = {},
     onMonthChanged: (YearMonth) -> Unit = {},
-    onReceiptClicked: (Long) -> Unit = {}
+    onReceiptClicked: (String) -> Unit = {}
 ) {
     Column(modifier = Modifier.padding(8.dp)) {
         MonthSelector(month = uiState.month, onMonthChanged = onMonthChanged)
@@ -52,6 +68,12 @@ fun OverviewScreen(
                 .background(MaterialTheme.colors.onBackground)
         )
         ReceiptCardsList(receipts = uiState.receipts, onReceiptClicked = onReceiptClicked)
+        Text(user.id)
+        Text(user.isAnonymous.toString())
+        Text(test.toString())
+        TextButton(onClick = clicked) {
+            Text("Sign In")
+        }
     }
 }
 
@@ -92,7 +114,7 @@ fun MonthlyTotal(total: Int) {
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun ReceiptCardsList(receipts: List<Receipt>, onReceiptClicked: (Long) -> Unit) {
+fun ReceiptCardsList(receipts: List<Receipt>, onReceiptClicked: (String) -> Unit) {
     val dateFormatter = remember { DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT) }
 
     LazyColumn(verticalArrangement = Arrangement.spacedBy(16.dp)) {

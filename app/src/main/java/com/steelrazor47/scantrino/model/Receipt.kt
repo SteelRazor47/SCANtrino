@@ -1,80 +1,71 @@
 package com.steelrazor47.scantrino.model
 
-import androidx.room.*
+import com.google.firebase.Timestamp
+import com.google.firebase.firestore.DocumentId
+import com.google.firebase.firestore.Exclude
 import java.time.LocalDateTime
+import java.time.ZoneId
+import java.util.*
 
-@Entity(tableName = "receipts")
-data class ReceiptInfo(
-    @PrimaryKey(autoGenerate = true) val id: Long = 0,
-    val store: String = "",
-    val date: LocalDateTime = LocalDateTime.now()
-)
-
-
-@Entity(tableName = "receipt_item_names")
-data class ReceiptItemName(
-    @PrimaryKey(autoGenerate = true) val itemId: Long = 0,
+data class ItemName(
+    @DocumentId val id: String = "",
     val name: String = "",
 )
 
-@DatabaseView(
-    """
-    SELECT receiptId, itemId, name, price FROM receipt_cross_ref 
-    JOIN receipt_item_names AS names ON names.itemId = receipt_cross_ref.receiptItemId
-"""
-)
 data class ReceiptItem(
-    val receiptId: Long = 0,
-    val itemId: Long = 0,
-    val name: String = "",
+    val name: ItemName = ItemName(),
     val price: Int = 0
-) {
-    constructor(name: ReceiptItemName, price: Int) :
-            this(itemId = name.itemId, name = name.name, price = price)
-
-    fun with(name: ReceiptItemName): ReceiptItem = copy(itemId = name.itemId, name = name.name)
-    fun with(price: Int): ReceiptItem = copy(price = price)
-}
+)
 
 data class Receipt(
-//    @Embedded
-//    val info: ReceiptInfo,
-    val id: Long = 0,
+    @DocumentId val id: String = "",
     val store: String = "",
-    val date: LocalDateTime = LocalDateTime.now(),
-    @Relation(
-        parentColumn = "id", entityColumn = "receiptId",
-    )
+    val timestamp: Timestamp = Timestamp.now(),
     val items: List<ReceiptItem> = listOf()
 ) {
-    @Ignore
-    val total: Int = items.sumOf { it.price }
+    constructor(
+        id: String = "",
+        store: String = "",
+        date: LocalDateTime,
+        items: List<ReceiptItem> = listOf()
+    ) : this(
+        id,
+        store,
+        Timestamp(Date.from(date.atZone(ZoneId.systemDefault()).toInstant())),
+        items
+    )
+
+    @get:Exclude
+    val total: Int
+        get() = items.sumOf { it.price }
+
+    @get:Exclude
+    val date: LocalDateTime =
+        timestamp.toDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime()
 }
 
+class DataMock {
 
-@Entity(
-    tableName = "receipt_cross_ref", primaryKeys = ["receiptId", "receiptItemId"],
-    indices = [Index(value = ["receiptId"], unique = false),
-        Index(value = ["receiptItemId"], unique = false)],
-    foreignKeys = [
-        ForeignKey(
-            entity = ReceiptInfo::class,
-            parentColumns = ["id"],
-            childColumns = ["receiptId"],
-            onUpdate = ForeignKey.CASCADE,
-            onDelete = ForeignKey.CASCADE
-        ),
-        ForeignKey(
-            entity = ReceiptItemName::class,
-            parentColumns = ["itemId"],
-            childColumns = ["receiptItemId"],
-            onUpdate = ForeignKey.CASCADE,
-            onDelete = ForeignKey.CASCADE
+    companion object {
+        val itemNames = listOf(
+            ItemName("a", "Apple"),
+            ItemName("b", "Banana"),
+            ItemName("c", "Orange"),
+            ItemName("d", "Pear")
         )
-    ]
-)
-data class ReceiptCrossRef(
-    val receiptId: Long,
-    val receiptItemId: Long,
-    val price: Int
-)
+        val items = itemNames.zip(listOf(23, 532, 57, 23))
+            .map { (name, price) -> ReceiptItem(name, price) }
+        val itemAverages = mapOf("a" to 20.0, "b" to 550.0, "c" to 90.0, "d" to 10.0)
+        val receipt = Receipt(
+            "1", "Conad", LocalDateTime.parse("2022-10-15T12:00:41"), items
+        )
+        val receipts =
+            listOf(
+                receipt,
+                receipt.copy(id = "2", store = "Coop"),
+                receipt.copy(id = "3", store = "Penny")
+            )
+        val invalidReceipt =
+            receipt.copy(items = items + listOf(ReceiptItem(ItemName("e", "Strawberry"), -1)))
+    }
+}

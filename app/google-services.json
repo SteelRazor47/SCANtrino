@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "1059307094894",
+    "project_id": "scantrino",
+    "storage_bucket": "scantrino.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1059307094894:android:0d0c2cc7e2f33ce33af77f",
+        "android_client_info": {
+          "package_name": "com.steelrazor47.scantrino"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1059307094894-hihre0r9s4njasvrc3qs5sj5bfccmv94.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.steelrazor47.scantrino",
+            "certificate_hash": "1014134f7345a279aab80190953b413e0fedc295"
+          }
+        },
+        {
+          "client_id": "1059307094894-tlb351779oi526pp784m1sno7rdis241.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAQZzFQNSpled7lgesENnjY9FmFHArpD5E"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1059307094894-tlb351779oi526pp784m1sno7rdis241.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
