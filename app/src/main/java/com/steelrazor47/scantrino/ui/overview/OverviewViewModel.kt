@@ -1,5 +1,6 @@
 package com.steelrazor47.scantrino.ui.overview
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.steelrazor47.scantrino.model.Receipt
@@ -11,6 +12,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import java.time.YearMonth
 import javax.inject.Inject
 
@@ -23,6 +25,7 @@ class OverviewViewModel @Inject constructor(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     var uiState = month.flatMapLatest { month ->
+        Log.d("testing", "storage")
         storageService.getReceiptsWithMonth(month).mapLatest {
             OverviewUiState(month, it)
         }
@@ -35,9 +38,12 @@ class OverviewViewModel @Inject constructor(
     fun signin(email: String, password: String) =
         viewModelScope.launch { accountService.linkAccount(email, password) }
 
+    fun signOut() = viewModelScope.launch { accountService.signOut() }
 
-    fun onStart() = viewModelScope.launch {
-        if (!hasUser) accountService.createAnonymousAccount()
+    fun onStart() {
+        runBlocking {
+            if (!hasUser) accountService.createAnonymousAccount()
+        }
     }
 
     val user = accountService.currentUser
