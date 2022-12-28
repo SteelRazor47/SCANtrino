@@ -1,7 +1,8 @@
-package com.steelrazor47.scantrino.model
+package com.steelrazor47.scantrino.model.service
 
 import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
+import com.steelrazor47.scantrino.model.User
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow

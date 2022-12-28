@@ -1,4 +1,4 @@
-package com.steelrazor47.scantrino.model
+package com.steelrazor47.scantrino.model.service
 
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth

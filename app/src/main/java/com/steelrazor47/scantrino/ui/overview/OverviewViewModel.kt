@@ -2,12 +2,13 @@ package com.steelrazor47.scantrino.ui.overview
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.steelrazor47.scantrino.model.AccountService
 import com.steelrazor47.scantrino.model.Receipt
-import com.steelrazor47.scantrino.model.StorageService
+import com.steelrazor47.scantrino.model.service.AccountService
+import com.steelrazor47.scantrino.model.service.StorageService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.launch
 import java.time.YearMonth
@@ -21,8 +22,10 @@ class OverviewViewModel @Inject constructor(
     private val month = MutableStateFlow(YearMonth.now())
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    var uiState = month.mapLatest { month ->
-        OverviewUiState(month, storageService.getReceiptsWithMonth(month))
+    var uiState = month.flatMapLatest { month ->
+        storageService.getReceiptsWithMonth(month).mapLatest {
+            OverviewUiState(month, it)
+        }
     }
 
     fun changeMonth(newMonth: YearMonth) {

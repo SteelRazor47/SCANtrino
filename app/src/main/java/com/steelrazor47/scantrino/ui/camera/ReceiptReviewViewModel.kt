@@ -14,7 +14,7 @@ import com.google.mlkit.vision.text.Text
 import com.steelrazor47.scantrino.model.ItemName
 import com.steelrazor47.scantrino.model.Receipt
 import com.steelrazor47.scantrino.model.ReceiptItem
-import com.steelrazor47.scantrino.model.StorageService
+import com.steelrazor47.scantrino.model.service.StorageService
 import com.steelrazor47.scantrino.utils.set
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch

@@ -1,14 +1,9 @@
 package com.steelrazor47.scantrino.model
 
-import com.google.firebase.Timestamp
-import com.google.firebase.firestore.DocumentId
-import com.google.firebase.firestore.Exclude
 import java.time.LocalDateTime
-import java.time.ZoneId
-import java.util.*
 
 data class ItemName(
-    @DocumentId val id: String = "",
+    val id: String = "",
     val name: String = "",
 )
 
@@ -18,30 +13,12 @@ data class ReceiptItem(
 )
 
 data class Receipt(
-    @DocumentId val id: String = "",
+    val id: String = "",
     val store: String = "",
-    val timestamp: Timestamp = Timestamp.now(),
+    val date: LocalDateTime = LocalDateTime.now(),
     val items: List<ReceiptItem> = listOf()
 ) {
-    constructor(
-        id: String = "",
-        store: String = "",
-        date: LocalDateTime,
-        items: List<ReceiptItem> = listOf()
-    ) : this(
-        id,
-        store,
-        Timestamp(Date.from(date.atZone(ZoneId.systemDefault()).toInstant())),
-        items
-    )
-
-    @get:Exclude
-    val total: Int
-        get() = items.sumOf { it.price }
-
-    @get:Exclude
-    val date: LocalDateTime =
-        timestamp.toDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime()
+    val total: Int = items.sumOf { it.price }
 }
 
 class DataMock {

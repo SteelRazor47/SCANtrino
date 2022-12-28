@@ -3,7 +3,7 @@
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.steelrazor47.scantrino.model.StorageService
+import com.steelrazor47.scantrino.model.service.StorageService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
@@ -36,7 +36,7 @@ class ReceiptViewModel @Inject constructor(
 
 enum class TimeFilter(val displayName: String, val period: Period?) {
     LastSeen("Last seen", null),
-    Always("Always", null),
     OneWeek("One week", Period.ofWeeks(1)),
-    OneMonth("One month", Period.ofMonths(1))
+    OneMonth("One month", Period.ofMonths(1)),
+    Always("Always", null)
 }
