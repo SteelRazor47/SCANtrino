@@ -1,6 +1,6 @@
 package com.steelrazor47.scantrino.model.service
 
-import com.google.firebase.auth.EmailAuthProvider
+import com.google.firebase.auth.AuthCredential
 import com.google.firebase.auth.FirebaseAuth
 import com.steelrazor47.scantrino.model.User
 import kotlinx.coroutines.channels.awaitClose
@@ -11,49 +11,31 @@ import javax.inject.Inject
 
 class AccountService @Inject constructor(private val auth: FirebaseAuth) {
 
-    val currentUserId: String
-        get() = auth.currentUser?.uid.orEmpty()
+    val currentUser: User?
+        get() = auth.currentUser?.let { User(it.uid, it.isAnonymous) }
 
     val hasUser: Boolean
         get() = auth.currentUser != null
 
-    val currentUser: Flow<User>
+    val currentUserFlow: Flow<User?>
         get() = callbackFlow {
             val listener =
                 FirebaseAuth.AuthStateListener { auth ->
-                    this.trySend(auth.currentUser?.let { User(it.uid, it.isAnonymous) } ?: User())
+                    this.trySend(auth.currentUser?.let { User(it.uid, it.isAnonymous) })
                 }
             auth.addAuthStateListener(listener)
             awaitClose { auth.removeAuthStateListener(listener) }
         }
 
-    suspend fun authenticate(email: String, password: String) {
-        auth.signInWithEmailAndPassword(email, password).await()
-    }
-
-    suspend fun sendRecoveryEmail(email: String) {
-        auth.sendPasswordResetEmail(email).await()
-    }
-
     suspend fun createAnonymousAccount() {
         auth.signInAnonymously().await()
     }
 
-    suspend fun linkAccount(email: String, password: String) {
-        val credential = EmailAuthProvider.getCredential(email, password)
-        auth.currentUser!!.linkWithCredential(credential).await()
+    suspend fun signIn(credential: AuthCredential) {
+        auth.signInWithCredential(credential).await()
     }
 
-    suspend fun deleteAccount() {
-        auth.currentUser!!.delete().await()
-    }
-
-    suspend fun signOut() {
-        if (auth.currentUser!!.isAnonymous) {
-            auth.currentUser!!.delete()
-        }
-        auth.signOut()
-
-        createAnonymousAccount()
+    fun delete() {
+        auth.currentUser!!.delete()
     }
 }

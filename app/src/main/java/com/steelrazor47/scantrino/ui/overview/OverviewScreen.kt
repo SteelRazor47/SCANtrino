@@ -1,7 +1,7 @@
 package com.steelrazor47.scantrino.ui.overview
 
-import android.app.Activity
 import android.content.res.Configuration
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -14,17 +14,19 @@ import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.firebase.ui.auth.AuthUI
 import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract
-import com.google.firebase.auth.FirebaseAuth
+import com.firebase.ui.auth.data.model.FirebaseAuthUIAuthenticationResult
 import com.steelrazor47.scantrino.model.DataMock
 import com.steelrazor47.scantrino.model.Receipt
 import com.steelrazor47.scantrino.model.User
 import com.steelrazor47.scantrino.ui.theme.ScantrinoTheme
 import com.steelrazor47.scantrino.utils.currencyFormatter
+import kotlinx.coroutines.flow.filterNotNull
 import java.time.Month
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
@@ -37,14 +39,18 @@ fun OverviewScreen(
     onReceiptClicked: (String) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState(OverviewUiState())
-    val user by viewModel.user.collectAsState(User())
+    val user by viewModel.user.filterNotNull().collectAsState(User())
+    val context = LocalContext.current
     OverviewScreen(
         uiState,
         user,
         viewModel.hasUser,
-        { viewModel.signOut() },
-        { viewModel.changeMonth(it) },
-        onReceiptClicked
+        onSignIn = {
+            viewModel.onSignIn(it) { msg -> Toast.makeText(context, msg, Toast.LENGTH_SHORT) }
+        },
+        onSignOut = { viewModel.signOut(context) },
+        onMonthChanged = viewModel::changeMonth,
+        onReceiptClicked = onReceiptClicked
     )
 
     LaunchedEffect(true) {
@@ -58,16 +64,27 @@ fun OverviewScreen(
     uiState: OverviewUiState,
     user: User = User(),
     test: Boolean = false,
+    onSignIn: (FirebaseAuthUIAuthenticationResult) -> Unit = {},
     onSignOut: () -> Unit = {},
     onMonthChanged: (YearMonth) -> Unit = {},
     onReceiptClicked: (String) -> Unit = {}
 ) {
     val firebaseLogin =
-        rememberLauncherForActivityResult(FirebaseAuthUIActivityResultContract()) { result ->
-            if (result.resultCode == Activity.RESULT_OK) {
-                val user = FirebaseAuth.getInstance().currentUser
-            }
-        }
+        rememberLauncherForActivityResult(FirebaseAuthUIActivityResultContract(), onSignIn)
+
+    val intent = remember {
+        AuthUI.getInstance().createSignInIntentBuilder()
+            .setAvailableProviders(
+                listOf(
+                    AuthUI.IdpConfig.EmailBuilder().build(),
+                    AuthUI.IdpConfig.GoogleBuilder().build()
+                )
+            )
+            .setAlwaysShowSignInMethodScreen(true)
+            .setIsSmartLockEnabled(false, true)
+            .enableAnonymousUsersAutoUpgrade()
+            .build()
+    }
     Column(modifier = Modifier.padding(8.dp)) {
         MonthSelector(month = uiState.month, onMonthChanged = onMonthChanged)
         MonthlyTotal(total = uiState.monthlyTotal)
@@ -85,20 +102,8 @@ fun OverviewScreen(
         TextButton(onClick = onSignOut) {
             Text("Sign out")
         }
-        TextButton(onClick = {
-            firebaseLogin.launch(
-                AuthUI.getInstance().createSignInIntentBuilder()
-                    .setAvailableProviders(
-                        listOf(
-                            AuthUI.IdpConfig.EmailBuilder().build(),
-                            AuthUI.IdpConfig.GoogleBuilder().build()
-                        )
-                    )
-                    .enableAnonymousUsersAutoUpgrade()
-                    .build()
-            )
-        }) {
-            Text("Login")
+        TextButton(onClick = { firebaseLogin.launch(intent) }) {
+            Text("Sign in")
         }
     }
 }

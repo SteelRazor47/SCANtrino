@@ -13,6 +13,7 @@ import com.steelrazor47.scantrino.ui.receipt.TimeFilter
 import com.steelrazor47.scantrino.utils.similarity
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
@@ -28,14 +29,18 @@ class StorageService
 constructor(private val firestore: FirebaseFirestore, private val auth: AccountService) {
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    fun getReceipt(receiptId: String): Flow<Receipt?> = auth.currentUser.flatMapLatest { user ->
-        receiptsCollection(user.id).document(receiptId).snapshots().map { it.toReceipt() }
-    }
+    fun getReceipt(receiptId: String): Flow<Receipt?> =
+        auth.currentUserFlow.filterNotNull().flatMapLatest { user ->
+            receiptsCollection(user.id).document(receiptId).snapshots().map { it.toReceipt() }
+        }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     fun getReceiptsWithMonth(month: YearMonth): Flow<List<Receipt>> {
         val start = month.atDay(1).atStartOfDay()
-        return receiptsCollection().whereBetween(start, start.plusMonths(1))
-            .snapshots().map { it.toReceipts() }
+        return auth.currentUserFlow.filterNotNull().flatMapLatest { user ->
+            receiptsCollection(user.id).whereBetween(start, start.plusMonths(1))
+                .snapshots().map { it.toReceipts() }
+        }
     }
 
     suspend fun getMostSimilarName(name: String): ItemName? =
@@ -69,7 +74,6 @@ constructor(private val firestore: FirebaseFirestore, private val auth: AccountS
 
             id to (item.price / avg - 1).takeIf { !it.isNaN() }
         }
-
         return variations
     }
 
@@ -99,13 +103,29 @@ constructor(private val firestore: FirebaseFirestore, private val auth: AccountS
         receiptRef.delete().await()
     }
 
-    private fun receiptsCollection(uid: String = auth.currentUserId) =
+    suspend fun deleteUserData() {
+        val userDoc = firestore.collection(USER_COLLECTION).document(auth.currentUser!!.id)
+        for (document in userDoc.collection(RECEIPT_COLLECTION).get().await().documents) {
+            userDoc.collection(RECEIPT_COLLECTION).document(document.id).delete().await()
+        }
+        for (name in userDoc.collection(NAME_COLLECTION).get().await().documents) {
+            val nameDoc = userDoc.collection(NAME_COLLECTION).document(name.id)
+            for (price in nameDoc.collection("prices").get().await().documents) {
+                nameDoc.collection("prices").document(price.id).delete().await()
+            }
+            nameDoc.delete().await()
+        }
+        userDoc.delete().await()
+    }
+
+    private fun receiptsCollection(uid: String = auth.currentUser!!.id) =
         firestore.collection(USER_COLLECTION).document(uid).collection(RECEIPT_COLLECTION)
 
     private fun pricesCollection(itemNameId: String) =
         namesCollection().document(itemNameId).collection("prices")
 
-    private fun namesCollection() = firestore.collection(NAME_COLLECTION)
+    private fun namesCollection(uid: String = auth.currentUser!!.id) =
+        firestore.collection(USER_COLLECTION).document(uid).collection(NAME_COLLECTION)
 
     companion object {
         private const val USER_COLLECTION = "users"
