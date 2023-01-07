@@ -24,7 +24,9 @@ import java.time.format.FormatStyle
 
 @Composable
 fun ReceiptScreen(
-    viewModel: ReceiptViewModel = hiltViewModel(), onReceiptDeleted: () -> Unit = {}
+    viewModel: ReceiptViewModel = hiltViewModel(),
+    onReceiptDeleted: () -> Unit = {},
+    onReceiptItemClicked: (receiptId: Long, itemNameId: Long) -> Unit
 ) {
     val receipt = viewModel.receipt.collectAsState(null).value ?: return
 
@@ -35,7 +37,8 @@ fun ReceiptScreen(
         averages,
         filter,
         onTimeFilterChanged = { viewModel.timeFilter.value = it },
-        onReceiptDeleted = { viewModel.deleteReceipt(); onReceiptDeleted() }
+        onReceiptDeleted = { viewModel.deleteReceipt(); onReceiptDeleted() },
+        onReceiptItemClicked = { onReceiptItemClicked(receipt.id, it) }
     )
 }
 
@@ -43,10 +46,11 @@ fun ReceiptScreen(
 @Composable
 fun ReceiptScreen(
     receipt: Receipt,
-    averages: Map<Long, Double>,
+    priceVariations: Map<Long, Double?>,
     timeFilter: TimeFilter,
     onTimeFilterChanged: (TimeFilter) -> Unit,
-    onReceiptDeleted: () -> Unit
+    onReceiptDeleted: () -> Unit,
+    onReceiptItemClicked: (itemNameId: Long) -> Unit
 ) {
 
     Column(modifier = Modifier.padding(8.dp)) {
@@ -76,11 +80,9 @@ fun ReceiptScreen(
             }
         }
 
-        LazyColumn(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             items(receipt.items) { item ->
-                val avg = averages[item.itemNameId] ?: Double.NaN
-                val priceVar = item.price / avg - 1
-                ItemCard(item, priceVar)
+                ItemCard(item, priceVariations[item.itemNameId], onReceiptItemClicked)
             }
         }
     }
@@ -88,8 +90,12 @@ fun ReceiptScreen(
 
 @Composable
 @OptIn(ExperimentalMaterialApi::class)
-private fun ItemCard(item: ReceiptItem, priceVar: Double) {
-    Card(onClick = { }, modifier = Modifier.fillMaxWidth()) {
+private fun ItemCard(
+    item: ReceiptItem,
+    priceVar: Double?,
+    onReceiptItemClicked: (id: Long) -> Unit
+) {
+    Card(onClick = { onReceiptItemClicked(item.itemNameId) }, modifier = Modifier.fillMaxWidth()) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.padding(8.dp)
@@ -99,17 +105,18 @@ private fun ItemCard(item: ReceiptItem, priceVar: Double) {
                 style = typography.h6,
                 modifier = Modifier.weight(3f), textAlign = TextAlign.Start
             )
-            if (!priceVar.isNaN())
+            priceVar?.let {
                 Text(
-                    text = NumberFormat.getPercentInstance().format(priceVar),
+                    text = NumberFormat.getPercentInstance().format(it),
                     color = when {
-                        priceVar < 0.0 -> MaterialTheme.colors.primary
-                        priceVar > 0.0 -> MaterialTheme.colors.error
+                        it < 0.0 -> MaterialTheme.colors.secondary
+                        it > 0.0 -> MaterialTheme.colors.error
                         else -> Color.Unspecified
                     },
                     style = typography.h6,
                     modifier = Modifier.weight(1f), textAlign = TextAlign.Center
                 )
+            }
             Text(
                 text = currencyFormatter.format(item.price / 100.0f),
                 style = typography.h6,
@@ -128,10 +135,11 @@ fun ReceiptScreenPreview() {
         Surface {
             ReceiptScreen(
                 receipt = DataMock.receipt,
-                averages = DataMock.itemAverages,
+                priceVariations = DataMock.itemVariations,
                 timeFilter = TimeFilter.OneWeek,
                 onTimeFilterChanged = {},
-                onReceiptDeleted = {}
+                onReceiptDeleted = {},
+                onReceiptItemClicked = {}
             )
         }
     }

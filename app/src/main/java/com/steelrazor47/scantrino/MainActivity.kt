@@ -37,6 +37,7 @@ import com.steelrazor47.scantrino.ui.camera.CameraScreen
 import com.steelrazor47.scantrino.ui.camera.ReceiptReviewScreen
 import com.steelrazor47.scantrino.ui.camera.ReceiptReviewViewModel
 import com.steelrazor47.scantrino.ui.overview.OverviewScreen
+import com.steelrazor47.scantrino.ui.receipt.ModifyItemScreen
 import com.steelrazor47.scantrino.ui.receipt.ReceiptScreen
 import com.steelrazor47.scantrino.ui.theme.ScantrinoTheme
 import com.steelrazor47.scantrino.utils.Routes
@@ -110,7 +111,16 @@ fun ScantrinoApp() {
                     route = "receipt/{receiptId}",
                     arguments = listOf(navArgument("receiptId") { type = NavType.LongType })
                 ) {
-                    ReceiptScreen(onReceiptDeleted = { navController.navigateUpTo(Routes.Overview.route) })
+                    ReceiptScreen(onReceiptDeleted = { navController.navigateUpTo(Routes.Overview.route) },
+                        onReceiptItemClicked = { receiptId, itemNameId -> navController.navigate("receiptItem/${receiptId}/${itemNameId}") })
+                }
+                composable(
+                    route = "receiptItem/{receiptId}/{receiptItemId}",
+                    arguments = listOf(
+                        navArgument("receiptId") { type = NavType.LongType },
+                        navArgument("receiptItemId") { type = NavType.LongType })
+                ) {
+                    ModifyItemScreen()
                 }
                 composable(route = Routes.Camera.route) {
                     CameraScreen(

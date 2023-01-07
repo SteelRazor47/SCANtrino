@@ -6,10 +6,8 @@ import androidx.lifecycle.viewModelScope
 import com.steelrazor47.scantrino.model.ReceiptsRepo
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import java.time.LocalDate
 import java.time.Period
 import javax.inject.Inject
 
@@ -28,17 +26,17 @@ class ReceiptViewModel @Inject constructor(
     val timeFilter = MutableStateFlow(TimeFilter.OneWeek)
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val itemPriceAverages = timeFilter.flatMapLatest {
-        when (it) {
-            TimeFilter.LastSeen -> receiptsRepo.getPreviousItemPrices(id)
-            TimeFilter.Always -> receiptsRepo.getItemPriceAverages(id)
-            else -> receiptsRepo.getItemPriceAverages(
-                id, LocalDate.now() - it.period, LocalDate.now()
-            )
+    val itemPriceAverages =
+        combine(timeFilter, receipt) { t, r -> t to r }.flatMapLatest { (filter, receipt) ->
+            if (receipt == null) return@flatMapLatest flowOf(mapOf())
+            val averages = receiptsRepo.getItemPriceAverages(receipt, filter)
+            averages.mapLatest {
+                it.mapValues { (id, average) ->
+                    val price = receipt.items.find { it.itemNameId == id }?.price
+                    price?.div(average)?.minus(1)
+                }
+            }
         }
-    }
-
-
 }
 
 
